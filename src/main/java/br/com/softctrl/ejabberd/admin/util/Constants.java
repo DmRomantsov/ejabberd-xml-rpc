@@ -48,7 +48,9 @@ public class Constants {
         public static final String CHANGE_PASSWORD = "change_password";
         
         public static final String CHANGE_ROOM_OPTION = "change_room_option";
-        
+
+        public static final String CREATE_ACCOUNT = "register";
+
         public static final String CHECK_ACCOUNT = "check_account";
 
         public static final String CHECK_PASSWORD = "check_password";

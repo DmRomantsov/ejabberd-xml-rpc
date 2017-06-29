@@ -5,7 +5,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
-import br.com.softctrl.utils.Objects;
 
 /*
 The MIT License (MIT)
@@ -50,9 +49,9 @@ public class SCParamBuilder {
     public SCParamBuilder(ISCAuthProcess process) { this(process, null); }
 
     public SCParamBuilder(ISCAuthProcess process, Map<String, Object> params) {
-        if (Objects.nonNullOrEmpty(params))
+        if (params != null && !params.isEmpty() )
             this.mParams.putAll(params);
-        if (Objects.nonNull(process)) {
+        if (process != null) {
             mProcess = process;
         } else {
             mProcess = new ISCAuthProcess() {
@@ -72,7 +71,10 @@ public class SCParamBuilder {
     }
 
     public List<Object> getParams() {
-        return Objects.requireNonNull(this.mProcess).auth(this.mParams);
+        if (this.mProcess == null )
+            throw new NullPointerException();
+        else
+            return this.mProcess.auth(this.mParams);
     }
 
     public SCParamBuilder clear() {

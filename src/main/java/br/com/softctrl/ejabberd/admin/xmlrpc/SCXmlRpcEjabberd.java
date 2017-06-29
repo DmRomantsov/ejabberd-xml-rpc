@@ -1,18 +1,15 @@
 package br.com.softctrl.ejabberd.admin.xmlrpc;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-
+import br.com.softctrl.ejabberd.admin.util.Constants;
+import br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder.ISCAuthProcess;
 import org.apache.xmlrpc.XmlRpcException;
 import org.apache.xmlrpc.client.XmlRpcClient;
 import org.apache.xmlrpc.client.XmlRpcClientConfigImpl;
 
-import br.com.softctrl.ejabberd.admin.util.Constants;
-import br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder.ISCAuthProcess;
-import br.com.softctrl.utils.Objects;
-import br.com.softctrl.utils.json.GsonUtils;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
 
 /*
 The MIT License (MIT)
@@ -53,7 +50,7 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @param url
      */
     public SCXmlRpcEjabberd(URL url) {
-        this(null, null, null, url);
+        this(null, null, null, url,"False");
     }
     
     /**
@@ -62,14 +59,13 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @param host
      * @param password
      * @param url
+     * @param uisAdmin : "True" or "False"
      */
-    public SCXmlRpcEjabberd(final String user, final String host, final String password, URL url) {
+    public SCXmlRpcEjabberd(final String user, final String host, final String password, URL url, String isAdmin) {
         final XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
         config.setServerURL(url);
         this.setConfig(config);
-        if (Objects.nonNullOrEmpty(user) 
-                && Objects.nonNullOrEmpty(user)
-                && Objects.nonNullOrEmpty(user)) {
+        if (user!=null && user.trim().length()>0 ) {
             mProcess = new ISCAuthProcess() {
                 @Override
                 public List<Object> auth(Hashtable<String, Object> params) {
@@ -78,6 +74,7 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
                     auth.put("user", user);
                     auth.put("server", host);
                     auth.put("password", password);
+                    auth.put("admin",isAdmin);
                     result.add(auth);
                     result.add(params);
                     return result;
@@ -102,11 +99,11 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return
      * @throws SCXmlRpcException
      */
-    protected String execute(String methodName, SCParamBuilder paramBuilder) throws SCXmlRpcException {
+    protected String execute(String methodName, br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder paramBuilder) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
         try {
-            return GsonUtils.toJson(execute(methodName, paramBuilder.getParams()));
+            return execute(methodName, paramBuilder.getParams()).toString();
         } catch (XmlRpcException e) {
-            throw new SCXmlRpcException(methodName, e);
+            throw new br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException(methodName, e);
         }
     }
 
@@ -124,9 +121,9 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @throws SCXmlRpcException
      */
     public String addRosterItem(String localuser, String localserver, String user, String server, String nick,
-            String group, String subs) throws SCXmlRpcException {
+            String group, String subs) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
         return execute(Constants.Api.ADD_ROSTERITEM,
-                new SCParamBuilder().addParam("localuser", localuser)
+                new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder().addParam("localuser", localuser)
                 .addParam("localserver", localserver)
                 .addParam("user", user)
                 .addParam("server", server)
@@ -142,8 +139,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return 
      * @throws SCXmlRpcException 
      */
-    public String backup(String file) throws SCXmlRpcException{
-        return execute(Constants.Api.BACKUP, new SCParamBuilder().addParam("file", file));
+    public String backup(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.BACKUP, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder().addParam("file", file));
     }
     
     /**
@@ -155,8 +152,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} - Status code: 0 on success, 1 otherwise.
      * @throws SCXmlRpcException 
      */
-    public String banAccount(String user, String host, String reason) throws SCXmlRpcException {
-        return execute(Constants.Api.BAN_ACCOUNT, new SCParamBuilder()
+    public String banAccount(String user, String host, String reason) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.BAN_ACCOUNT, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("reason", reason));        
@@ -171,8 +168,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} Status code: 0 on success, 1 otherwise.
      * @throws SCXmlRpcException
      */
-    public String changePassword(String user, String host, String newpass) throws SCXmlRpcException {
-        return execute(Constants.Api.CHANGE_PASSWORD, new SCParamBuilder()
+    public String changePassword(String user, String host, String newpass) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CHANGE_PASSWORD, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("newpass", newpass));        
@@ -188,8 +185,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return
      * @throws SCXmlRpcException
      */
-    public String changeRoomOption(String name, String service, String option, String value) throws SCXmlRpcException {
-        return execute(Constants.Api.CHANGE_ROOM_OPTION, new SCParamBuilder()
+    public String changeRoomOption(String name, String service, String option, String value) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CHANGE_ROOM_OPTION, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("name", name)
                 .addParam("service", service)
                 .addParam("option", option)
@@ -204,10 +201,26 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} Status code: 0 on success, 1 otherwise.
      * @throws SCXmlRpcException
      */
-    public String checkAccount(String user, String host) throws SCXmlRpcException {
-        return execute(Constants.Api.CHECK_ACCOUNT, new SCParamBuilder(this.mProcess)
+    public String checkAccount(String user, String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CHECK_ACCOUNT, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess)
                 .addParam("user", user)
                 .addParam("host", host));  
+    }
+
+    /**
+     * Creates Account
+     *
+     * @param name User name to crate.
+     * @param host Server to check
+     * @return {res,rescode} Status code: 0 on success, 1 otherwise.
+     * @throws SCXmlRpcException
+     */
+
+    public String createAccount(String user, String host, String password) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CREATE_ACCOUNT, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess)
+                .addParam("user", user)
+                .addParam("password", password)
+                .addParam("host", host));
     }
     
     /**
@@ -219,8 +232,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} Status code: 0 on success, 1 otherwise.
      * @throws SCXmlRpcException
      */
-    public String checkPassword(String user, String host, String password) throws SCXmlRpcException {
-        return execute(Constants.Api.CHECK_PASSWORD, new SCParamBuilder(this.mProcess)
+    public String checkPassword(String user, String host, String password) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CHECK_PASSWORD, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess)
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("password", password));  
@@ -237,8 +250,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} Status code: 0 on success, 1 otherwise.
      * @throws SCXmlRpcException
      */
-    public String checkPasswordHash(String user, String host, String passwordhash, String hashmethod) throws SCXmlRpcException {
-        return execute(Constants.Api.CHECK_PASSWORD_HASH, new SCParamBuilder()
+    public String checkPasswordHash(String user, String host, String passwordhash, String hashmethod) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CHECK_PASSWORD_HASH, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("passwordhash", passwordhash)
@@ -252,8 +265,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} Status code: 0 on success, 1 otherwise.
      * @throws SCXmlRpcException
      */
-    public String compile(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.COMPILE, new SCParamBuilder()
+    public String compile(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.COMPILE, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));  
     }
     
@@ -263,9 +276,9 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {connected_users,{list,{sessions,string}}}.
      * @throws SCXmlRpcException
      */
-    public String connectedUsers() throws SCXmlRpcException {
+    public String connectedUsers() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
         return execute(Constants.Api.CONNECTED_USERS,
-                new SCParamBuilder(this.mProcess));
+                new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -276,8 +289,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      *         {priority,integer}, {node,string}, {uptime,integer}]}}}}.
      * @throws SCXmlRpcException
      */
-    public String connectedUsersInfo() throws SCXmlRpcException {
-        return execute(Constants.Api.CONNECTED_USERS_INFO, new SCParamBuilder(this.mProcess));  
+    public String connectedUsersInfo() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CONNECTED_USERS_INFO, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -286,8 +299,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {num_sessions,integer}.
      * @throws SCXmlRpcException
      */
-    public String connectedUsersNumber() throws SCXmlRpcException {
-        return execute(Constants.Api.CONNECTED_USERS_NUMBER, new SCParamBuilder(this.mProcess));  
+    public String connectedUsersNumber() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CONNECTED_USERS_NUMBER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -297,8 +310,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {connected_users_vhost,{list,{sessions,string}}}.
      * @throws SCXmlRpcException
      */
-    public String connectedUsersVhost(String vhost) throws SCXmlRpcException {
-        return execute(Constants.Api.CONNECTED_USERS_VHOST, new SCParamBuilder(this.mProcess)
+    public String connectedUsersVhost(String vhost) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CONNECTED_USERS_VHOST, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess)
                 .addParam("host", vhost));  
     }
 
@@ -309,8 +322,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String convertToScram(String host) throws SCXmlRpcException {
-        return execute(Constants.Api.CONVERT_TO_SCRAM, new SCParamBuilder().addParam("host", host));  
+    public String convertToScram(String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CONVERT_TO_SCRAM, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder().addParam("host", host));
     }
     
     /**
@@ -321,8 +334,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String convertToYaml(String in, String out) throws SCXmlRpcException {
-        return execute(Constants.Api.CONVERT_TO_SCRAM, new SCParamBuilder().addParam("in", in).addParam("out", out));
+    public String convertToYaml(String in, String out) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CONVERT_TO_SCRAM, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder().addParam("in", in).addParam("out", out));
     }
     
     /**
@@ -334,8 +347,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String createRoom(String name, String service, String host) throws SCXmlRpcException {
-        return execute(Constants.Api.CREATE_ROOM, new SCParamBuilder()
+    public String createRoom(String name, String service, String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CREATE_ROOM, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("name", name)
                 .addParam("service", service)
                 .addParam("host", host));
@@ -349,8 +362,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String createRoomsFile(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.CREATE_ROOMS_FILE, new SCParamBuilder()
+    public String createRoomsFile(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.CREATE_ROOMS_FILE, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
     
@@ -360,8 +373,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String deleteExpiredMessages() throws SCXmlRpcException {
-        return execute(Constants.Api.DELETE_EXPIRED_MESSAGES, new SCParamBuilder());
+    public String deleteExpiredMessages() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DELETE_EXPIRED_MESSAGES, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder());
     }
 
     /**
@@ -372,8 +385,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String deleteOldMamMessages(String type, Integer days) throws SCXmlRpcException {
-        return execute(Constants.Api.DELETE_OLD_MAM_MESSAGES, new SCParamBuilder()
+    public String deleteOldMamMessages(String type, Integer days) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DELETE_OLD_MAM_MESSAGES, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("type", type)
                 .addParam("days", days));
     }
@@ -385,8 +398,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String deleteOldMessages(Integer days) throws SCXmlRpcException {
-        return execute(Constants.Api.DELETE_OLD_MESSAGES, new SCParamBuilder()
+    public String deleteOldMessages(Integer days) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DELETE_OLD_MESSAGES, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("days", days));
     }
     
@@ -397,8 +410,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple} Result tuple.
      * @throws SCXmlRpcException
      */
-    public String deleteOldUsers(Integer days) throws SCXmlRpcException {
-        return execute(Constants.Api.DELETE_OLD_USERS, new SCParamBuilder()
+    public String deleteOldUsers(Integer days) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DELETE_OLD_USERS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("days", days));
     }
     
@@ -410,8 +423,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple} Result tuple.
      * @throws SCXmlRpcException
      */
-    public String deleteOldUsersVhost(String host, Integer days) throws SCXmlRpcException {
-        return execute(Constants.Api.DELETE_OLD_USERS_VHOST, new SCParamBuilder()
+    public String deleteOldUsersVhost(String host, Integer days) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DELETE_OLD_USERS_VHOST, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("host", host)
                 .addParam("days", days));
     }
@@ -426,8 +439,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String deleteRosterItem(String localuser, String localserver, String user, String server) throws SCXmlRpcException {
-        return execute(Constants.Api.DELETE_ROSTER_ITEM, new SCParamBuilder()
+    public String deleteRosterItem(String localuser, String localserver, String user, String server) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DELETE_ROSTER_ITEM, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("localuser", localuser)
                 .addParam("localserver", localserver)
                 .addParam("user", user)
@@ -442,8 +455,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String destroyRoom(String name, String service) throws SCXmlRpcException {
-        return execute(Constants.Api.DESTROY_ROOM, new SCParamBuilder()
+    public String destroyRoom(String name, String service) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DESTROY_ROOM, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("name", name)
                 .addParam("service", service));
     }
@@ -456,8 +469,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String destroyRoomsFile(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.DESTROY_ROOMS_FILE, new SCParamBuilder()
+    public String destroyRoomsFile(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DESTROY_ROOMS_FILE, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
     
@@ -468,8 +481,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String dump(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.DUMP, new SCParamBuilder()
+    public String dump(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DUMP, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
     
@@ -481,8 +494,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String dumpTable(String file, String table) throws SCXmlRpcException {
-        return execute(Constants.Api.DUMP_TABLE, new SCParamBuilder()
+    public String dumpTable(String file, String table) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.DUMP_TABLE, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file)
                 .addParam("table", table));
     }
@@ -511,8 +524,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {thatinteger,integer}.
      * @throws SCXmlRpcException
      */
-    public String echoInteger(Integer thisinteger) throws SCXmlRpcException {
-        return execute(Constants.Api.ECHO_INTEGER, new SCParamBuilder()
+    public String echoInteger(Integer thisinteger) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.ECHO_INTEGER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("thisinteger", thisinteger));
     }
     
@@ -524,8 +537,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {thistuple,{tuple,[{thatinteger,integer}, {thatlist,{list,{thatstring,string}}}]}}.
      * @throws SCXmlRpcException
      */
-    public String echoIntegerListString(Integer thisinteger, Object... thislist) throws SCXmlRpcException {
-        return execute(Constants.Api.ECHO_INTEGER_LIST_STRING, new SCParamBuilder()
+    public String echoIntegerListString(Integer thisinteger, Object... thislist) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.ECHO_INTEGER_LIST_STRING, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("thisinteger", thisinteger)
                 .addParam("thislist", thislist));
     }
@@ -538,8 +551,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {thistuple,{tuple,[{thisinteger,integer},{thisstring,string}]}}.
      * @throws SCXmlRpcException
      */
-    public String echoIntegerString(Integer thisinteger, String thisstring) throws SCXmlRpcException {
-        return execute(Constants.Api.ECHO_INTEGER_STRING, new SCParamBuilder()
+    public String echoIntegerString(Integer thisinteger, String thisstring) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.ECHO_INTEGER_STRING, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("thisinteger", thisinteger));
     }
 
@@ -559,9 +572,9 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @throws SCXmlRpcException
      */
     public String echoIsatils(Integer thisinteger, String thisstring, String thisatom, String... thislist)
-            throws SCXmlRpcException {
+            throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
         Object[][] thistuple = new Object[][]{{"listlen", thislist.length}, {"thislist", getList("contentstring", thislist)}};
-        return this.execute(Constants.Api.ECHO_ISATILS, new SCParamBuilder()
+        return this.execute(Constants.Api.ECHO_ISATILS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("thisinteger", thisinteger)
                 .addParam("thisstring", thisstring)
                 .addParam("thisatom", thisatom)
@@ -576,9 +589,9 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @throws SCXmlRpcException
      */
     public String echoListInteger(Integer[] thislist)
-            throws SCXmlRpcException {
+            throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
         Object[] thislist2 = getList("thisinteger", thislist);
-        return execute(Constants.Api.ECHO_LIST_INTEGER, new SCParamBuilder()
+        return execute(Constants.Api.ECHO_LIST_INTEGER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("thislist", thislist2));
     }
     
@@ -590,9 +603,9 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @throws SCXmlRpcException
      */
     public String echoListString(String[] thislist)
-            throws SCXmlRpcException {
+            throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
         Object[] thislist2 = getList("thisstring", thislist);
-        return execute(Constants.Api.ECHO_LIST_STRING, new SCParamBuilder()
+        return execute(Constants.Api.ECHO_LIST_STRING, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("thislist", thislist2));
     }
     
@@ -603,8 +616,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {thatstring,string}.
      * @throws SCXmlRpcException
      */
-    public String echoString(String thisstring) throws SCXmlRpcException {
-        return execute(Constants.Api.ECHO_STRING, new SCParamBuilder()
+    public String echoString(String thisstring) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.ECHO_STRING, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("thisstring", thisstring));
     }
     
@@ -616,8 +629,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String exportToOdbc(String host, String directory) throws SCXmlRpcException {
-        return execute(Constants.Api.EXPORT_TO_ODBC, new SCParamBuilder()
+    public String exportToOdbc(String host, String directory) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.EXPORT_TO_ODBC, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("host", host)
                 .addParam("directory", directory));
     }
@@ -630,8 +643,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String exportOdbc(String host, String file) throws SCXmlRpcException {
-        return execute(Constants.Api.EXPORT_ODBC, new SCParamBuilder()
+    public String exportOdbc(String host, String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.EXPORT_ODBC, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("host", host)
                 .addParam("file", file));
     }
@@ -643,8 +656,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String exportPiefxis(String dir) throws SCXmlRpcException {
-        return execute(Constants.Api.EXPORT_PIEFXIS, new SCParamBuilder()
+    public String exportPiefxis(String dir) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.EXPORT_PIEFXIS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("dir", dir));
     }
     
@@ -656,8 +669,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String exportPiefxisHost(String dir, String host) throws SCXmlRpcException {
-        return execute(Constants.Api.EXPORT_PIEFXIS_HOST, new SCParamBuilder()
+    public String exportPiefxisHost(String dir, String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.EXPORT_PIEFXIS_HOST, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("dir", dir)
                 .addParam("host", host));
     }
@@ -677,8 +690,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} 0 if command failed, 1 when succedded.
      * @throws SCXmlRpcException
      */
-    public String genHtmlDocForCommands(String file, String regex, String examples) throws SCXmlRpcException {
-        return execute(Constants.Api.GEN_HTML_DOC_FOR_COMMANDS, new SCParamBuilder()
+    public String genHtmlDocForCommands(String file, String regex, String examples) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GEN_HTML_DOC_FOR_COMMANDS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file)
                 .addParam("regex", regex)
                 .addParam("examples", examples));
@@ -699,8 +712,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} 0 if command failed, 1 when succedded.
      * @throws SCXmlRpcException
      */
-    public String genMarkdownDocForCommands(String file, String regex, String examples) throws SCXmlRpcException {
-        return execute(Constants.Api.GEN_MARKDOWN_DOC_FOR_COMMANDS, new SCParamBuilder()
+    public String genMarkdownDocForCommands(String file, String regex, String examples) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GEN_MARKDOWN_DOC_FOR_COMMANDS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file)
                 .addParam("regex", regex)
                 .addParam("examples", examples));
@@ -712,8 +725,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {cookie,string} Erlang cookie used for authentication by ejabberd.
      * @throws SCXmlRpcException
      */
-    public String getCookie() throws SCXmlRpcException {
-        return execute(Constants.Api.GET_COOKIE, new SCParamBuilder(this.mProcess));
+    public String getCookie() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_COOKIE, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -724,8 +737,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {last_activity,string}.
      * @throws SCXmlRpcException
      */
-    public String getLast(String user, String host) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_LAST, new SCParamBuilder(this.mProcess)
+    public String getLast(String user, String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_LAST, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess)
                 .addParam("user", user)
                 .addParam("host", host));
     }
@@ -737,8 +750,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      *         {leveldesc,string}]}}.
      * @throws SCXmlRpcException
      */
-    public String getLogLevel() throws SCXmlRpcException {
-        return execute(Constants.Api.GET_LOG_LEVEL, new SCParamBuilder(this.mProcess));
+    public String getLogLevel() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_LOG_LEVEL, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -747,8 +760,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,integer}.
      * @throws SCXmlRpcException
      */
-    public String getOfflineCount() throws SCXmlRpcException {
-        return execute(Constants.Api.GET_OFFLINE_COUNT, new SCParamBuilder(this.mProcess));
+    public String getOfflineCount() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_OFFLINE_COUNT, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -760,8 +773,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      *         {domain,string}, {affiliation,atom}, {reason,string}]}}}}.
      * @throws SCXmlRpcException
      */
-    public String getRoomAffiliations(String name, String service) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_ROOM_AFFILIATIONS, new SCParamBuilder()
+    public String getRoomAffiliations(String name, String service) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_ROOM_AFFILIATIONS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("name", name)
                 .addParam("service", service));
     }
@@ -773,8 +786,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {occupants,{list,{occupant,{tuple,[{jid,string}, {nick,string}, {role,string}]}}}}.
      * @throws SCXmlRpcException
      */
-    public String getRoomOccupants(String name, String service) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_ROOM_OCCUPANTS, new SCParamBuilder()
+    public String getRoomOccupants(String name, String service) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_ROOM_OCCUPANTS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("name", name)
                 .addParam("service", service));
     }
@@ -786,8 +799,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {occupants,integer}.
      * @throws SCXmlRpcException
      */
-    public String getRoomOccupantsNumber(String name, String service) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_ROOM_OCCUPANTS_NUMBER, new SCParamBuilder()
+    public String getRoomOccupantsNumber(String name, String service) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_ROOM_OCCUPANTS_NUMBER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("name", name)
                 .addParam("service", service));
     }
@@ -799,8 +812,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {options,{list,{option,{tuple,[{name,string},{value,string}]}}}}.
      * @throws SCXmlRpcException
      */
-    public String getRoomOptions(String name, String service) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_ROOM_OPTIONS, new SCParamBuilder()
+    public String getRoomOptions(String name, String service) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_ROOM_OPTIONS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("name", name)
                 .addParam("service", service));
     }
@@ -812,8 +825,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      *         {subscription,string}, {ask,string}, {group,string}]}}}}.
      * @throws SCXmlRpcException
      */
-    public String getRoster() throws SCXmlRpcException {
-        return execute(Constants.Api.GET_ROSTER, new SCParamBuilder(this.mProcess));
+    public String getRoster() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_ROSTER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -824,8 +837,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {rooms,{list,{room,string}}}.
      * @throws SCXmlRpcException
      */
-    public String getUserRooms(String user, String host) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_USER_ROOMS, new SCParamBuilder(this.mProcess)
+    public String getUserRooms(String user, String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_USER_ROOMS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess)
                 .addParam("user", user)
                 .addParam("host", host));
     }
@@ -848,8 +861,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {content,string}.
      * @throws SCXmlRpcException
      */
-    public String getVCard(String user, String host, String name) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_VCARD, new SCParamBuilder()
+    public String getVCard(String user, String host, String name) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_VCARD, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("name", name));
@@ -874,8 +887,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {content,string}.
      * @throws SCXmlRpcException
      */
-    public String getVCard2(String user, String host, String name, String subname) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_VCARD2, new SCParamBuilder()
+    public String getVCard2(String user, String host, String name, String subname) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_VCARD2, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("name", name)
@@ -902,8 +915,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {contents,{list,{value,string}}}.
      * @throws SCXmlRpcException
      */
-    public String getVCard2Multi(String user, String host, String name, String subname) throws SCXmlRpcException {
-        return execute(Constants.Api.GET_VCARD2_MULTI, new SCParamBuilder()
+    public String getVCard2Multi(String user, String host, String name, String subname) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.GET_VCARD2_MULTI, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("name", name)
@@ -917,8 +930,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String importDir(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.IMPORT_DIR, new SCParamBuilder()
+    public String importDir(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.IMPORT_DIR, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
     
@@ -929,8 +942,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String importFile(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.IMPORT_FILE, new SCParamBuilder()
+    public String importFile(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.IMPORT_FILE, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
     
@@ -941,8 +954,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String importPiefxis(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.IMPORT_PIEFXIS, new SCParamBuilder()
+    public String importPiefxis(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.IMPORT_PIEFXIS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
     
@@ -953,8 +966,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String importProsody(String dir) throws SCXmlRpcException {
-        return execute(Constants.Api.IMPORT_PROSODY, new SCParamBuilder()
+    public String importProsody(String dir) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.IMPORT_PROSODY, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("dir", dir));
     }
     
@@ -964,8 +977,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {s2s_incoming,integer}.
      * @throws SCXmlRpcException
      */
-    public String incomingS2sNumber() throws SCXmlRpcException {
-        return execute(Constants.Api.INCOMING_S2S_NUMBER, new SCParamBuilder());
+    public String incomingS2sNumber() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.INCOMING_S2S_NUMBER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder());
     }
     
     /**
@@ -975,8 +988,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String installFallback(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.INSTALL_FALLBACK, new SCParamBuilder()
+    public String installFallback(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.INSTALL_FALLBACK, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
     
@@ -987,8 +1000,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String joinCluster(String node) throws SCXmlRpcException {
-        return execute(Constants.Api.JOIN_CLUSTER, new SCParamBuilder()
+    public String joinCluster(String node) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.JOIN_CLUSTER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("node", node));
     }
     
@@ -1002,8 +1015,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode} Status code: 0 on success, 1 otherwise.
      * @throws SCXmlRpcException
      */
-    public String kickSession(String user, String host, String resource, String reason) throws SCXmlRpcException {
-        return execute(Constants.Api.KICK_SESSION, new SCParamBuilder()
+    public String kickSession(String user, String host, String resource, String reason) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.KICK_SESSION, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("resource", resource)
@@ -1018,8 +1031,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {num_resources,integer}.
      * @throws SCXmlRpcException
      */
-    public String kickUser(String user, String host) throws SCXmlRpcException {
-        return execute(Constants.Api.KICK_USER, new SCParamBuilder()
+    public String kickUser(String user, String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.KICK_USER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host));
     }
@@ -1031,8 +1044,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String leaveCluster(String node) throws SCXmlRpcException {
-        return execute(Constants.Api.LEAVE_CLUSTER, new SCParamBuilder()
+    public String leaveCluster(String node) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.LEAVE_CLUSTER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("node", node));
     }
     
@@ -1042,8 +1055,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {nodes,{list,{node,atom}}}.
      * @throws SCXmlRpcException
      */
-    public String listCluster() throws SCXmlRpcException {
-        return execute(Constants.Api.LIST_CLUSTER, new SCParamBuilder());
+    public String listCluster() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.LIST_CLUSTER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder());
     }
     
     /**
@@ -1053,8 +1066,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String load(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.LOAD, new SCParamBuilder()
+    public String load(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.LOAD, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
     
@@ -1069,8 +1082,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @throws SCXmlRpcException
      */
     public String mnesiaChangeNodename(String oldnodename, String newnodename,
-            String oldbackup, String newbackup) throws SCXmlRpcException {
-        return execute(Constants.Api.MNESIA_CHANGE_NODENAME, new SCParamBuilder()
+            String oldbackup, String newbackup) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MNESIA_CHANGE_NODENAME, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("oldnodename", oldnodename)
                 .addParam("newnodename", newnodename)
                 .addParam("oldbackup", oldbackup)
@@ -1084,8 +1097,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,integer}.
      * @throws SCXmlRpcException
      */
-    public String moduleCheck(String module) throws SCXmlRpcException {
-        return execute(Constants.Api.MODULE_CHECK, new SCParamBuilder()
+    public String moduleCheck(String module) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MODULE_CHECK, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("module", module));
     }
     
@@ -1096,8 +1109,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,integer}.
      * @throws SCXmlRpcException
      */
-    public String moduleInstall(String module) throws SCXmlRpcException {
-        return execute(Constants.Api.MODULE_INSTALL, new SCParamBuilder()
+    public String moduleInstall(String module) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MODULE_INSTALL, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("module", module));
     }
     
@@ -1108,8 +1121,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,integer}.
      * @throws SCXmlRpcException
      */
-    public String moduleUninstall(String module) throws SCXmlRpcException {
-        return execute(Constants.Api.MODULE_UNINSTALL, new SCParamBuilder()
+    public String moduleUninstall(String module) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MODULE_UNINSTALL, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("module", module));
     }
     
@@ -1120,8 +1133,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,integer}.
      * @throws SCXmlRpcException
      */
-    public String moduleUpgrade(String module) throws SCXmlRpcException {
-        return execute(Constants.Api.MODULE_UPGRADE, new SCParamBuilder()
+    public String moduleUpgrade(String module) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MODULE_UPGRADE, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("module", module));
     }
     
@@ -1131,8 +1144,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {modules,{list,{module,{tuple,[{name,atom},{summary,string}]}}}}.
      * @throws SCXmlRpcException
      */
-    public String modulesAvailable() throws SCXmlRpcException {
-        return execute(Constants.Api.MODULES_AVAILABLE, new SCParamBuilder(this.mProcess));
+    public String modulesAvailable() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MODULES_AVAILABLE, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -1141,8 +1154,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {modules,{list,{module,{tuple,[{name,atom},{summary,string}]}}}}.
      * @throws SCXmlRpcException
      */
-    public String modulesInstalled() throws SCXmlRpcException {
-        return execute(Constants.Api.MODULES_INSTALLED, new SCParamBuilder(this.mProcess));
+    public String modulesInstalled() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MODULES_INSTALLED, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -1151,8 +1164,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,integer}.
      * @throws SCXmlRpcException
      */
-    public String modulesUpdate_specs() throws SCXmlRpcException {
-        return execute(Constants.Api.MODULES_UPDATE_SPECS, new SCParamBuilder(this.mProcess));
+    public String modulesUpdate_specs() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MODULES_UPDATE_SPECS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder(this.mProcess));
     }
     
     /**
@@ -1162,8 +1175,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {rooms,{list,{room,string}}}.
      * @throws SCXmlRpcException
      */
-    public String mucOnlineRooms(String host) throws SCXmlRpcException {
-        return execute(Constants.Api.MUC_ONLINE_ROOMS, new SCParamBuilder()
+    public String mucOnlineRooms(String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MUC_ONLINE_ROOMS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("host", host));
     }
     
@@ -1174,8 +1187,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String mucUnregisterNick(String nick) throws SCXmlRpcException {
-        return execute(Constants.Api.MUC_UNREGISTER_NICK, new SCParamBuilder()
+    public String mucUnregisterNick(String nick) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.MUC_UNREGISTER_NICK, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("nick", nick));
     }
     
@@ -1191,8 +1204,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      *         days.
      * @throws SCXmlRpcException
      */
-    public String numActiveUsers(String host, int days) throws SCXmlRpcException {
-        return execute(Constants.Api.NUM_ACTIVE_USERS, new SCParamBuilder()
+    public String numActiveUsers(String host, int days) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.NUM_ACTIVE_USERS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("host", host)
                 .addParam("days", days));
     }
@@ -1205,8 +1218,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {resources,integer} Number of active resources for a user.
      * @throws SCXmlRpcException
      */
-    public String numResources(String user, String host) throws SCXmlRpcException {
-        return execute(Constants.Api.NUM_RESOURCES, new SCParamBuilder()
+    public String numResources(String user, String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.NUM_RESOURCES, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host));
     }
@@ -1217,8 +1230,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {s2s_outgoing,integer}.
      * @throws SCXmlRpcException
      */
-    public String outgoingS2sNumber() throws SCXmlRpcException {
-        return execute(Constants.Api.OUTGOING_S2S_NUMBER, new SCParamBuilder());
+    public String outgoingS2sNumber() throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.OUTGOING_S2S_NUMBER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder());
     }
     
     /**
@@ -1230,8 +1243,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {power,integer}.
      * @throws SCXmlRpcException
      */
-    public String pow(int base, int expoent) throws SCXmlRpcException {
-        return execute(Constants.Api.POW, new SCParamBuilder()
+    public String pow(int base, int expoent) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.POW, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("base", base)
                 .addParam("expoent", expoent));
     }
@@ -1245,8 +1258,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String privacySet(String user, String host, String xmlquery) throws SCXmlRpcException {
-        return execute(Constants.Api.PRIVACY_SET, new SCParamBuilder()
+    public String privacySet(String user, String host, String xmlquery) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.PRIVACY_SET, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("xmlquery", xmlquery));
@@ -1262,8 +1275,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,string}.
      * @throws SCXmlRpcException
      */
-    public String privateGet(String user, String host, String element, String ns) throws SCXmlRpcException {
-        return execute(Constants.Api.PRIVATE_GET, new SCParamBuilder()
+    public String privateGet(String user, String host, String element, String ns) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.PRIVATE_GET, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("element", element)
@@ -1279,8 +1292,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String privateSet(String user, String host, String element) throws SCXmlRpcException {
-        return execute(Constants.Api.PRIVATE_SET, new SCParamBuilder()
+    public String privateSet(String user, String host, String element) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.PRIVATE_SET, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("element", element));
@@ -1311,8 +1324,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      *         }.
      * @throws SCXmlRpcException
      */
-    public String processRosterItems(String action, String subs, String asks, String users, String contacts) throws SCXmlRpcException {
-        return execute(Constants.Api.PROCESS_ROSTERITEMS, new SCParamBuilder()
+    public String processRosterItems(String action, String subs, String asks, String users, String contacts) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.PROCESS_ROSTERITEMS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("action", action)
                 .addParam("subs", subs)
                 .addParam("asks", asks)
@@ -1328,8 +1341,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,rescode}.
      * @throws SCXmlRpcException
      */
-    public String pushAllToAll(String host, String group) throws SCXmlRpcException {
-        return execute(Constants.Api.PUSH_ALLTOALL, new SCParamBuilder()
+    public String pushAllToAll(String host, String group) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.PUSH_ALLTOALL, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("host", host)
                 .addParam("group", group));
     }
@@ -1343,8 +1356,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
 	 * @return {res,rescode}.
 	 * @throws SCXmlRpcException
 	 */
-    public String pushHoster(String file, String host, String group) throws SCXmlRpcException {
-        return execute(Constants.Api.PUSH_HOSTER, new SCParamBuilder()
+    public String pushHoster(String file, String host, String group) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.PUSH_HOSTER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file)
                 .addParam("host", host)
                 .addParam("group", group));
@@ -1356,8 +1369,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return
      * @throws SCXmlRpcException
      */
-    public String pushRosterAll(String file) throws SCXmlRpcException {
-        return execute(Constants.Api.PUSH_ROSTER_ALL, new SCParamBuilder()
+    public String pushRosterAll(String file) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.PUSH_ROSTER_ALL, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("file", file));
     }
 
@@ -1370,8 +1383,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
      * @return {res,restuple}.
      * @throws SCXmlRpcException
      */
-    public String register(String user, String host, String password) throws SCXmlRpcException {
-        return execute(Constants.Api.REGISTER, new SCParamBuilder()
+    public String register(String user, String host, String password) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+        return execute(Constants.Api.REGISTER, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder()
                 .addParam("user", user)
                 .addParam("host", host)
                 .addParam("password", password));
@@ -1383,8 +1396,8 @@ public class SCXmlRpcEjabberd extends XmlRpcClient {
 	 * @return {users,{list,{username,string}}}.
 	 * @throws SCXmlRpcException
 	 */
-	public String registeredUsers(String host) throws SCXmlRpcException {
-		return execute(Constants.Api.REGISTERED_USERS, new SCParamBuilder().addParam("host", host));
+	public String registeredUsers(String host) throws br.com.softctrl.ejabberd.admin.xmlrpc.SCXmlRpcException {
+		return execute(Constants.Api.REGISTERED_USERS, new br.com.softctrl.ejabberd.admin.xmlrpc.SCParamBuilder().addParam("host", host));
 	}
 
     //TODO: Just a reminder to help me. next registered_vhosts
